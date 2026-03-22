@@ -1,0 +1,409 @@
+export default function CompliantProspectorStarter() {
+  const prospects = [
+    {
+      id: 1,
+      name: "Aarti Kapoor",
+      current_role: "Managing Director, Consumer & Retail Investment Banking at Cascadia Capital",
+      location: "New York, New York",
+      icp_match_score: 94,
+      urgency_score: 92,
+      matched_icp: "high_income_professional",
+      summary:
+        "Managing Director of Consumer & Retail Investment Banking at Cascadia Capital with 18+ years of experience in finance.",
+      match_reasons: [
+        "NYC-based and tightly aligned to the target geography",
+        "MD role at an investment bank suggests high income and complex compensation",
+        "Elite finance background across Goldman Sachs, Moelis, and Citi",
+      ],
+      why_now_reasons: [
+        "Recently promoted to Managing Director in November 2025",
+        "Recent career transition suggests fresh compensation and equity planning decisions",
+        "Peak earning years with likely growing tax complexity",
+      ],
+      concerns: [
+        "Recent role changes may require a careful, respectful tone",
+        "Avoid assuming personal wealth beyond what the record supports",
+      ],
+      recommended_outreach_angle:
+        "Congratulate on the MD appointment and position the outreach around tax-efficient planning for investment banking compensation and multiple equity positions.",
+    },
+    {
+      id: 2,
+      name: "Aaron Hancock",
+      current_role: "Senior Vice President Co-Portfolio Manager at Artemis Real Estate Partners",
+      location: "New York, New York",
+      icp_match_score: 78,
+      urgency_score: 65,
+      matched_icp: "high_income_professional",
+      summary:
+        "Senior finance leader in real estate private equity with multiple income streams and strong NYC fit.",
+      match_reasons: [
+        "NYC-based",
+        "Senior role in alternative investments",
+        "Complex compensation across portfolio management, consulting, and education roles",
+      ],
+      why_now_reasons: [
+        "Established SVP role with likely growing compensation complexity",
+        "Multiple concurrent roles suggest need for wealth structuring",
+      ],
+      concerns: [
+        "No explicit recent promotion or liquidity event",
+        "Need to avoid overclaiming urgency",
+      ],
+      recommended_outreach_angle:
+        "Frame the message around optimizing multiple income streams and diversifying beyond concentrated real estate exposure.",
+    },
+    {
+      id: 3,
+      name: "Adam Guild",
+      current_role: "Co-founder & CEO at Owner",
+      location: "San Francisco Bay Area, California",
+      icp_match_score: 45,
+      urgency_score: 35,
+      matched_icp: "business_owners",
+      summary:
+        "Successful founder, but outside target geography and still in a growth-stage company.",
+      match_reasons: [
+        "Founder and CEO of a growing company",
+        "Strong entrepreneurial profile",
+      ],
+      why_now_reasons: [
+        "Business growth may create future opportunities",
+      ],
+      concerns: [
+        "Outside target geography",
+        "No clear near-term liquidity trigger",
+        "Current timing appears weak for outreach",
+      ],
+      recommended_outreach_angle:
+        "Not recommended for immediate outreach.",
+    },
+  ];
+
+  const ranked = [...prospects]
+    .map((p) => ({
+      ...p,
+      priority: Math.round(p.urgency_score * 0.6 + p.icp_match_score * 0.4),
+    }))
+    .sort((a, b) => b.priority - a.priority);
+
+  const selected = ranked[0];
+
+  const draft = {
+    subject: `A quick idea for ${selected.name.split(" ")[0]} at ${getFirmName(selected.current_role)}`,
+    body: generateDraft(selected),
+  };
+
+  const review = runComplianceReview(draft.body, selected);
+  const flaggedQueue = ranked
+    .map((p) => ({
+      prospect: p,
+      body: generateDraft(p),
+    }))
+    .map((item) => ({
+      ...item,
+      review: runComplianceReview(item.body, item.prospect),
+    }))
+    .filter((item) => item.review.status !== "Verified");
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <header className="space-y-2">
+          <div className="inline-flex items-center rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-sm text-emerald-300">
+            Pulse Miami Hackathon Starter
+          </div>
+          <h1 className="text-4xl font-semibold tracking-tight">Compliant Prospector</h1>
+          <p className="text-slate-300 max-w-3xl">
+            A starter prototype for ranking prospects, drafting short advisor outreach, and routing risky messages to a reviewer with an audit trail.
+          </p>
+        </header>
+
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-medium">Top prospects</h2>
+              <span className="text-sm text-slate-400">Sorted by priority</span>
+            </div>
+            <div className="space-y-3">
+              {ranked.map((prospect) => (
+                <div
+                  key={prospect.id}
+                  className={`rounded-2xl border p-4 ${
+                    prospect.id === selected.id
+                      ? "border-emerald-400/50 bg-emerald-400/10"
+                      : "border-slate-800 bg-slate-950"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-medium">{prospect.name}</div>
+                      <div className="text-sm text-slate-400">{prospect.current_role}</div>
+                    </div>
+                    <StatusPill label={`P${prospect.priority}`} tone="neutral" />
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                    <StatusPill label={`ICP ${prospect.icp_match_score}`} tone="blue" />
+                    <StatusPill label={`Urgency ${prospect.urgency_score}`} tone="amber" />
+                    <StatusPill label={prospect.location} tone="neutral" />
+                  </div>
+                  <p className="mt-3 text-sm text-slate-300">{prospect.summary}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="lg:col-span-2 space-y-6">
+            <div className="rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <h2 className="text-2xl font-medium">Prospect workspace</h2>
+                  <p className="text-slate-400">Why this lead, why now, and what to say.</p>
+                </div>
+                <div className="flex gap-2">
+                  <button className="rounded-2xl bg-slate-800 px-4 py-2 text-sm hover:bg-slate-700">Regenerate</button>
+                  <button className="rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-emerald-400">Send</button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                    <h3 className="text-lg font-medium">Prospect summary</h3>
+                    <p className="text-sm text-slate-300 mt-2">{selected.summary}</p>
+                  </div>
+
+                  <InfoBlock title="Match reasons" items={selected.match_reasons} />
+                  <InfoBlock title="Why now" items={selected.why_now_reasons} />
+                  <InfoBlock title="Potential concerns" items={selected.concerns} />
+
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                    <h3 className="text-lg font-medium">Recommended outreach angle</h3>
+                    <p className="mt-2 text-sm text-slate-300">{selected.recommended_outreach_angle}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <h3 className="text-lg font-medium">Drafted outreach</h3>
+                      <StatusPill label={review.status} tone={toneForStatus(review.status)} />
+                    </div>
+                    <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900 p-4">
+                      <div className="text-xs uppercase tracking-wide text-slate-500">Subject</div>
+                      <div className="mt-1 text-sm">{draft.subject}</div>
+                      <div className="mt-4 text-xs uppercase tracking-wide text-slate-500">Body</div>
+                      <p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-200">{draft.body}</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <h3 className="text-lg font-medium">Compliance review</h3>
+                      <span className="text-sm text-slate-400">Risk score: {review.riskScore}</span>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      {review.flags.length === 0 ? (
+                        <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-3 text-sm text-emerald-200">
+                          No risky phrases were detected. This draft follows the advisor style and complement-not-replace guardrail.
+                        </div>
+                      ) : (
+                        review.flags.map((flag, idx) => (
+                          <div key={idx} className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-3">
+                            <div className="font-medium text-amber-200">Flagged: “{flag.text}”</div>
+                            <div className="mt-1 text-sm text-slate-300">{flag.reason}</div>
+                            <div className="mt-2 text-sm text-slate-200">
+                              <span className="text-slate-400">Suggested rewrite:</span> {flag.rewrite}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                    <h3 className="text-lg font-medium">Audit trail</h3>
+                    <ul className="mt-3 space-y-2 text-sm text-slate-300">
+                      {review.auditTrail.map((item, idx) => (
+                        <li key={idx} className="rounded-xl bg-slate-900 px-3 py-2">{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <h2 className="text-2xl font-medium">Reviewer queue</h2>
+                  <p className="text-slate-400">Only drafts that need attention should show up here.</p>
+                </div>
+                <StatusPill label={`${flaggedQueue.length} items`} tone="neutral" />
+              </div>
+
+              <div className="mt-5 grid grid-cols-1 xl:grid-cols-2 gap-4">
+                {flaggedQueue.map((item) => (
+                  <div key={item.prospect.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <div>
+                        <div className="font-medium">{item.prospect.name}</div>
+                        <div className="text-sm text-slate-400">{item.prospect.current_role}</div>
+                      </div>
+                      <StatusPill label={item.review.status} tone={toneForStatus(item.review.status)} />
+                    </div>
+                    <p className="mt-3 text-sm text-slate-300 whitespace-pre-line">{item.body}</p>
+                    <div className="mt-3 space-y-2">
+                      {item.review.flags.map((flag, idx) => (
+                        <div key={idx} className="rounded-xl border border-amber-400/30 bg-amber-400/10 p-3 text-sm">
+                          <div className="text-amber-200">{flag.reason}</div>
+                          <div className="mt-1 text-slate-300">Rewrite: {flag.rewrite}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 flex gap-2">
+                      <button className="rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-emerald-400">Approve</button>
+                      <button className="rounded-2xl bg-slate-800 px-4 py-2 text-sm hover:bg-slate-700">Request edit</button>
+                      <button className="rounded-2xl bg-rose-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-rose-400">Block</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function generateDraft(prospect) {
+  const firstName = prospect.name.split(" ")[0];
+  const firm = getFirmName(prospect.current_role);
+  const roleHint = prospect.current_role.split(" at ")[0];
+
+  if (prospect.name === "Adam Guild") {
+    return `Given your role at ${firm}, I wanted to share a strategy that will definitely improve your tax efficiency. We can help you replace the gaps in your current advisor relationship and move quickly on planning. Would you be open to a short conversation next week?`;
+  }
+
+  return `Given your role as ${roleHint} at ${firm}, I wanted to share an innovative tax-advantaged approach that may be relevant right now. This is designed as an ancillary opportunity to optimize overall tax efficiency while complementing your existing advisory team. ${firstName}, would you be open to a brief conversation next week?`;
+}
+
+function getFirmName(role) {
+  const parts = role.split(" at ");
+  return parts[1] || role;
+}
+
+function runComplianceReview(body, prospect) {
+  const flags = [];
+  let riskScore = 8;
+  const auditTrail = [
+    `Checked message against length, promissory language, advisor-replacement language, and personalization support.`,
+    `Grounded outreach in prospect record for ${prospect.name}.`,
+  ];
+
+  const riskyPatterns = [
+    {
+      test: /definitely|guaranteed|guarantee/i,
+      text: extractMatch(body, /definitely|guaranteed|guarantee/i),
+      reason: "Promissory or guaranteed language can create compliance risk.",
+      rewrite: "may help improve tax efficiency",
+      score: 35,
+    },
+    {
+      test: /replace.*advisor|replacing.*advisor|without your current advisor|current advisor relationship/i,
+      text: extractMatch(body, /replace.*advisor|replacing.*advisor|without your current advisor|current advisor relationship/i),
+      reason: "The message must position the outreach as complementary, not a replacement for the current advisor.",
+      rewrite: "while complementing your existing advisory team",
+      score: 30,
+    },
+    {
+      test: /wealth management/i,
+      text: extractMatch(body, /wealth management/i),
+      reason: "Generic wealth-management phrasing is discouraged by the advisor notes.",
+      rewrite: "a specific tax-efficiency strategy relevant to your role",
+      score: 12,
+    },
+  ];
+
+  riskyPatterns.forEach((pattern) => {
+    if (pattern.test.test(body)) {
+      flags.push({ text: pattern.text, reason: pattern.reason, rewrite: pattern.rewrite });
+      riskScore += pattern.score;
+      auditTrail.push(`Flagged phrase: ${pattern.text}. Reason: ${pattern.reason}`);
+    }
+  });
+
+  const sentenceCount = body.split(/[.!?]+/).filter(Boolean).length;
+  if (sentenceCount > 3) {
+    flags.push({
+      text: `${sentenceCount} sentences`,
+      reason: "Outreach should stay very short and focused.",
+      rewrite: "Reduce to 2-3 concise sentences.",
+    });
+    riskScore += 15;
+    auditTrail.push(`Message length exceeded the preferred 3-sentence structure.`);
+  }
+
+  if (!/complement/i.test(body)) {
+    flags.push({
+      text: "Missing complement guardrail",
+      reason: "The draft should explicitly say it complements the current advisory team.",
+      rewrite: "Add a sentence that positions the outreach as ancillary and complementary.",
+    });
+    riskScore += 20;
+    auditTrail.push(`Required complement-not-replace language was missing.`);
+  }
+
+  if (!/Given your role|Given your/i.test(body)) {
+    flags.push({
+      text: "Weak hook",
+      reason: "The message should open with a firm- or role-specific hook.",
+      rewrite: "Mention the prospect's role, firm, or industry in the first sentence.",
+    });
+    riskScore += 10;
+    auditTrail.push(`Message lacked a strong prospect-specific opening hook.`);
+  }
+
+  const status = riskScore >= 60 ? "Needs Review" : riskScore >= 30 ? "Review Suggested" : "Verified";
+  auditTrail.push(`Final status: ${status} with risk score ${riskScore}.`);
+
+  return { status, riskScore, flags, auditTrail };
+}
+
+function extractMatch(text, regex) {
+  const match = text.match(regex);
+  return match ? match[0] : "Detected phrase";
+}
+
+function InfoBlock({ title, items }) {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+      <h3 className="text-lg font-medium">{title}</h3>
+      <ul className="mt-3 space-y-2 text-sm text-slate-300">
+        {items.map((item, idx) => (
+          <li key={idx} className="rounded-xl bg-slate-900 px-3 py-2">{item}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function StatusPill({ label, tone = "neutral" }) {
+  const styles = {
+    neutral: "border-slate-700 bg-slate-800 text-slate-200",
+    blue: "border-sky-400/30 bg-sky-400/10 text-sky-200",
+    amber: "border-amber-400/30 bg-amber-400/10 text-amber-200",
+    green: "border-emerald-400/30 bg-emerald-400/10 text-emerald-200",
+    red: "border-rose-400/30 bg-rose-400/10 text-rose-200",
+  };
+
+  return <span className={`rounded-full border px-2.5 py-1 text-xs ${styles[tone]}`}>{label}</span>;
+}
+
+function toneForStatus(status) {
+  if (status === "Verified") return "green";
+  if (status === "Needs Review") return "red";
+  return "amber";
+}
